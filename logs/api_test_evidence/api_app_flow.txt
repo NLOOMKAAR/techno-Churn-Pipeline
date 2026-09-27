@@ -1,0 +1,33 @@
+GET /api/app/flow
+HTTP_STATUS: 200
+Response:
+{
+    "pipeline_name": "dataops_pipeline_job",
+    "schedule": "every 2 minutes (APScheduler interval trigger, UTC)",
+    "stages": [
+        {
+            "order": 1,
+            "stage": "Data Ingestion",
+            "module": "generate_data.py",
+            "description": "Loads/refreshes the raw Telco customer dataset"
+        },
+        {
+            "order": 2,
+            "stage": "Pre-processing",
+            "module": "preprocessing.py",
+            "description": "Summary stats, missing value detection & imputation, dtype fix, normalization"
+        },
+        {
+            "order": 3,
+            "stage": "EDA",
+            "module": "eda.py",
+            "description": "Correlation, binning, encoding, feature importance, visualizations"
+        },
+        {
+            "order": 4,
+            "stage": "Logging & History",
+            "module": "pipeline.py",
+            "description": "Structured logs to logs/pipeline.log and run_history.json"
+        }
+    ]
+}

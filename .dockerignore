@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.git
+.gitignore
+.env
+*.pdf
+page-*.jpg
+node_modules/
+data_backup/
+logs/*.log
+logs/api_test_evidence/screenshots/*.png

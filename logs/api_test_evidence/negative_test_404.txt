@@ -1,0 +1,6 @@
+GET /api/nonexistent
+HTTP_STATUS: 404
+Response:
+{
+    "detail": "Not Found"
+}

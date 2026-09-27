@@ -1,0 +1,13 @@
+GET /api/app/info
+HTTP_STATUS: 200
+Response:
+{
+    "app_name": "telco-churn-dataops-pipeline",
+    "version": "1.0.0",
+    "environment": "cloud-production",
+    "deployment_target": "Docker container (portable to AWS ECS/Fargate, GCP Cloud Run, or Azure Container Apps)",
+    "python_version": "3.12.3",
+    "platform": "Linux-6.18.44-fc-v42-x86_64-with-glibc2.39",
+    "started_at_utc": "2026-09-25T09:54:40.171695+00:00",
+    "uptime_seconds": 59.64
+}

@@ -1,0 +1,92 @@
+GET /api/pipeline/runs?limit=5
+HTTP_STATUS: 200
+Response:
+{
+    "total_runs": 2,
+    "runs": [
+        {
+            "run_id": "run-20260925T060201",
+            "timestamp_utc": "2026-09-25T06:02:03.739523+00:00",
+            "status": "SUCCESS",
+            "duration_sec": 1.74,
+            "rows_processed": 7043,
+            "missing_values_fixed": {
+                "TotalCharges": {
+                    "missing_count": 11,
+                    "missing_pct": 0.16
+                }
+            },
+            "top_feature_importances": {
+                "Contract_enc": 0.1689760199,
+                "tenure": 0.1560023637,
+                "MonthlyCharges": 0.1124013927,
+                "TotalCharges": 0.105792401,
+                "OnlineSecurity_enc": 0.0807339718,
+                "TechSupport_enc": 0.0696091759,
+                "InternetService_enc": 0.0675734865,
+                "tenure_bin_enc": 0.0624118669
+            },
+            "top_correlations_with_churn": {
+                "Contract_enc": 0.3967126292,
+                "tenure": 0.3522286701,
+                "tenure_bin_enc": 0.3454101255,
+                "OnlineSecurity_enc": 0.2893089961,
+                "TechSupport_enc": 0.2824916082,
+                "TotalCharges": 0.1990368319,
+                "OnlineBackup_enc": 0.1955250141,
+                "MonthlyCharges": 0.1933564222
+            },
+            "charts_generated": [
+                "01_churn_distribution.png",
+                "02_monthly_charges_hist.png",
+                "03_churn_by_tenure_bin.png",
+                "04_churn_by_contract.png",
+                "05_correlation_heatmap.png",
+                "06_feature_importance.png"
+            ],
+            "error": null
+        },
+        {
+            "run_id": "run-20260925T060224",
+            "timestamp_utc": "2026-09-25T06:02:25.930630+00:00",
+            "status": "SUCCESS",
+            "duration_sec": 1.72,
+            "rows_processed": 7043,
+            "missing_values_fixed": {
+                "TotalCharges": {
+                    "missing_count": 11,
+                    "missing_pct": 0.16
+                }
+            },
+            "top_feature_importances": {
+                "Contract_enc": 0.1689760199,
+                "tenure": 0.1560023637,
+                "MonthlyCharges": 0.1124013927,
+                "TotalCharges": 0.105792401,
+                "OnlineSecurity_enc": 0.0807339718,
+                "TechSupport_enc": 0.0696091759,
+                "InternetService_enc": 0.0675734865,
+                "tenure_bin_enc": 0.0624118669
+            },
+            "top_correlations_with_churn": {
+                "Contract_enc": 0.3967126292,
+                "tenure": 0.3522286701,
+                "tenure_bin_enc": 0.3454101255,
+                "OnlineSecurity_enc": 0.2893089961,
+                "TechSupport_enc": 0.2824916082,
+                "TotalCharges": 0.1990368319,
+                "OnlineBackup_enc": 0.1955250141,
+                "MonthlyCharges": 0.1933564222
+            },
+            "charts_generated": [
+                "01_churn_distribution.png",
+                "02_monthly_charges_hist.png",
+                "03_churn_by_tenure_bin.png",
+                "04_churn_by_contract.png",
+                "05_correlation_heatmap.png",
+                "06_feature_importance.png"
+            ],
+            "error": null
+        }
+    ]
+}

@@ -1,0 +1,874 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Telco Churn DataOps Pipeline API",
+    "description": "Cloud-native, versioned REST API exposing application, deployment, pipeline and dataset details for the AIMLCZG549 Assignment-1 Telco Churn DataOps pipeline.",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Live",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Ready",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Legacy",
+        "description": "Deprecated alias kept for backward compatibility - use /health/live or /health/ready.",
+        "operationId": "health_legacy_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/v1/app/info": {
+      "get": {
+        "tags": [
+          "app"
+        ],
+        "summary": "App Info",
+        "operationId": "app_info_api_v1_app_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppInfoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/app/flow": {
+      "get": {
+        "tags": [
+          "app"
+        ],
+        "summary": "App Flow",
+        "operationId": "app_flow_api_v1_app_flow_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppFlowResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/runs": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Pipeline Runs",
+        "operationId": "pipeline_runs_api_v1_pipeline_runs_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pipeline/latest": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Pipeline Latest",
+        "operationId": "pipeline_latest_api_v1_pipeline_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dataset/info": {
+      "get": {
+        "tags": [
+          "dataset"
+        ],
+        "summary": "Dataset Info",
+        "operationId": "dataset_info_api_v1_dataset_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetInfoResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eda/feature-importance": {
+      "get": {
+        "tags": [
+          "eda"
+        ],
+        "summary": "Feature Importance Endpoint",
+        "operationId": "feature_importance_endpoint_api_v1_eda_feature_importance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureImportanceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "observability"
+        ],
+        "summary": "Metrics",
+        "operationId": "metrics_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Dashboard",
+        "description": "Simple server-rendered Cloud dashboard summarizing DataOps activity.",
+        "operationId": "dashboard_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/app/info": {
+      "get": {
+        "tags": [
+          "legacy"
+        ],
+        "summary": "App Info",
+        "operationId": "app_info_api_app_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/app/flow": {
+      "get": {
+        "tags": [
+          "legacy"
+        ],
+        "summary": "App Flow",
+        "operationId": "app_flow_api_app_flow_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/pipeline/runs": {
+      "get": {
+        "tags": [
+          "legacy"
+        ],
+        "summary": "Pipeline Runs",
+        "operationId": "pipeline_runs_api_pipeline_runs_get",
+        "deprecated": true,
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline/latest": {
+      "get": {
+        "tags": [
+          "legacy"
+        ],
+        "summary": "Pipeline Latest",
+        "operationId": "pipeline_latest_api_pipeline_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/dataset/info": {
+      "get": {
+        "tags": [
+          "legacy"
+        ],
+        "summary": "Dataset Info",
+        "operationId": "dataset_info_api_dataset_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/api/eda/feature-importance": {
+      "get": {
+        "tags": [
+          "legacy"
+        ],
+        "summary": "Feature Importance Endpoint",
+        "operationId": "feature_importance_endpoint_api_eda_feature_importance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppFlowResponse": {
+        "properties": {
+          "pipeline_name": {
+            "type": "string",
+            "title": "Pipeline Name"
+          },
+          "schedule": {
+            "type": "string",
+            "title": "Schedule"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineStage"
+            },
+            "type": "array",
+            "title": "Stages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pipeline_name",
+          "schedule",
+          "stages"
+        ],
+        "title": "AppFlowResponse"
+      },
+      "AppInfoResponse": {
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "title": "App Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "deployment_target": {
+            "type": "string",
+            "title": "Deployment Target"
+          },
+          "python_version": {
+            "type": "string",
+            "title": "Python Version"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "started_at_utc": {
+            "type": "string",
+            "title": "Started At Utc"
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "title": "Uptime Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_name",
+          "version",
+          "environment",
+          "deployment_target",
+          "python_version",
+          "platform",
+          "started_at_utc",
+          "uptime_seconds"
+        ],
+        "title": "AppInfoResponse"
+      },
+      "DatasetInfoResponse": {
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
+          "columns": {
+            "type": "integer",
+            "title": "Columns"
+          },
+          "column_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Column Names"
+          },
+          "target_variable": {
+            "type": "string",
+            "title": "Target Variable"
+          },
+          "churn_rate": {
+            "type": "number",
+            "title": "Churn Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "columns",
+          "column_names",
+          "target_variable",
+          "churn_rate"
+        ],
+        "title": "DatasetInfoResponse"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "examples": [
+              "NOT_FOUND"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "FeatureImportanceResponse": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "top_feature_importances": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Top Feature Importances"
+          },
+          "top_correlations_with_churn": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Top Correlations With Churn"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "top_feature_importances",
+          "top_correlations_with_churn"
+        ],
+        "title": "FeatureImportanceResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LivenessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "alive"
+          },
+          "server_time_utc": {
+            "type": "string",
+            "title": "Server Time Utc"
+          }
+        },
+        "type": "object",
+        "required": [
+          "server_time_utc"
+        ],
+        "title": "LivenessResponse"
+      },
+      "MetricsResponse": {
+        "properties": {
+          "requests_total": {
+            "type": "integer",
+            "title": "Requests Total"
+          },
+          "requests_by_path": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Requests By Path"
+          },
+          "pipeline_runs_total": {
+            "type": "integer",
+            "title": "Pipeline Runs Total"
+          },
+          "pipeline_runs_success": {
+            "type": "integer",
+            "title": "Pipeline Runs Success"
+          },
+          "pipeline_runs_failed": {
+            "type": "integer",
+            "title": "Pipeline Runs Failed"
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "title": "Uptime Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requests_total",
+          "requests_by_path",
+          "pipeline_runs_total",
+          "pipeline_runs_success",
+          "pipeline_runs_failed",
+          "uptime_seconds"
+        ],
+        "title": "MetricsResponse"
+      },
+      "PipelineRun": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "timestamp_utc": {
+            "type": "string",
+            "title": "Timestamp Utc"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "duration_sec": {
+            "type": "number",
+            "title": "Duration Sec"
+          },
+          "rows_processed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rows Processed"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "run_id",
+          "timestamp_utc",
+          "status",
+          "duration_sec"
+        ],
+        "title": "PipelineRun"
+      },
+      "PipelineRunsResponse": {
+        "properties": {
+          "total_runs": {
+            "type": "integer",
+            "title": "Total Runs"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineRun"
+            },
+            "type": "array",
+            "title": "Runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_runs",
+          "runs"
+        ],
+        "title": "PipelineRunsResponse"
+      },
+      "PipelineStage": {
+        "properties": {
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "module": {
+            "type": "string",
+            "title": "Module"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order",
+          "stage",
+          "module",
+          "description"
+        ],
+        "title": "PipelineStage"
+      },
+      "ReadinessCheck": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "ok"
+        ],
+        "title": "ReadinessCheck"
+      },
+      "ReadinessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/ReadinessCheck"
+            },
+            "type": "array",
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "checks"
+        ],
+        "title": "ReadinessResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

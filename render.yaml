@@ -1,0 +1,24 @@
+# Render Blueprint - deploys this exact Dockerfile as a free Web Service.
+# Render injects $PORT itself (usually 10000); api/config.py + entrypoint.sh
+# already read $PORT dynamically, so no code changes were needed for this.
+#
+# Deploy: push this repo to GitHub, then on Render -> New -> Blueprint ->
+# select the repo. Render reads this file and creates the service automatically.
+services:
+  - type: web
+    name: telco-churn-dataops-pipeline
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health/live
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LOG_FORMAT
+        value: json
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: ENABLE_EMBEDDED_SCHEDULER
+        value: "true"     # single free instance -> embedded APScheduler is correct here

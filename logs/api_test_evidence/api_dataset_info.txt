@@ -1,0 +1,35 @@
+GET /api/dataset/info
+HTTP_STATUS: 200
+Response:
+{
+    "rows": 7043,
+    "columns": 24,
+    "column_names": [
+        "customerID",
+        "gender",
+        "SeniorCitizen",
+        "Partner",
+        "Dependents",
+        "tenure",
+        "PhoneService",
+        "MultipleLines",
+        "InternetService",
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies",
+        "Contract",
+        "PaperlessBilling",
+        "PaymentMethod",
+        "MonthlyCharges",
+        "TotalCharges",
+        "Churn",
+        "tenure_norm",
+        "MonthlyCharges_norm",
+        "TotalCharges_norm"
+    ],
+    "target_variable": "Churn",
+    "churn_rate": 0.2654
+}

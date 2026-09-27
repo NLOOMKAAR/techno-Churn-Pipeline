@@ -1,0 +1,113 @@
+{
+  "info": {
+    "name": "Telco Churn DataOps Pipeline API (v2 - cloud-native)",
+    "description": "AIMLCZG549 Assignment-1 API testing collection. Import into Postman, set {{base_url}} to your deployed URL (e.g. http://localhost:8000, or your cloud/k8s service URL). Covers versioned /api/v1 routes, split health probes, metrics, and deprecated legacy aliases kept for backward compatibility.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health - Liveness",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health/live"
+      }
+    },
+    {
+      "name": "Health - Readiness",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health/ready"
+      }
+    },
+    {
+      "name": "Health - Legacy alias (deprecated)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "App Info v1 (deployment details)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/app/info"
+      }
+    },
+    {
+      "name": "App Flow v1 (pipeline stages)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/app/flow"
+      }
+    },
+    {
+      "name": "Pipeline Runs v1 (history)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/pipeline/runs?limit=5"
+      }
+    },
+    {
+      "name": "Pipeline Latest v1",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/pipeline/latest"
+      }
+    },
+    {
+      "name": "Dataset Info v1",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/dataset/info"
+      }
+    },
+    {
+      "name": "Feature Importance v1",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/eda/feature-importance"
+      }
+    },
+    {
+      "name": "Metrics (observability)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/metrics"
+      }
+    },
+    {
+      "name": "Dashboard (HTML)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/dashboard"
+      }
+    },
+    {
+      "name": "OpenAPI schema",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/openapi.json"
+      }
+    },
+    {
+      "name": "Legacy: App Info (deprecated alias)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/app/info"
+      }
+    },
+    {
+      "name": "Negative test: unmatched route -> 404 envelope",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/nonexistent"
+      }
+    }
+  ]
+}

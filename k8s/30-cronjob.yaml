@@ -1,0 +1,43 @@
+# Correct cloud-native scheduling pattern for a *multi-replica* API
+# deployment: exactly one Job runs the pipeline every 2 minutes, instead of
+# every API pod running its own embedded APScheduler (which would duplicate
+# runs). Pairs with 10-deployment.yaml setting ENABLE_EMBEDDED_SCHEDULER=false.
+#
+# NOTE: pipeline.py writes logs/run_history.json to a local path. For this
+# CronJob's writes to be visible to the API pods reading that same file,
+# mount a shared volume (e.g. an EFS/Filestore-backed PVC with ReadWriteMany)
+# at /app/logs and /app/data on both the Deployment and this CronJob - not
+# shown here to keep the manifest portable across clouds; add the
+# volumeMounts/volumes block your cluster's storage class provides.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: churn-pipeline-run
+  namespace: churn-pipeline
+spec:
+  schedule: "*/2 * * * *"       # every 2 minutes, matches Activity 1.5
+  concurrencyPolicy: Forbid      # never run two pipeline runs at once
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+          containers:
+            - name: churn-pipeline-run
+              image: <YOUR_REGISTRY>/telco-churn-dataops-pipeline:2.0.0
+              command: ["python", "pipeline.py"]
+              envFrom:
+                - configMapRef:
+                    name: churn-api-config
+              resources:
+                requests:
+                  cpu: "200m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "1"
+                  memory: "512Mi"

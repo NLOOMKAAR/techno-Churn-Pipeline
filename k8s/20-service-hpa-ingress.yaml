@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: churn-api
+  namespace: churn-pipeline
+spec:
+  selector:
+    app: churn-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: churn-api
+  namespace: churn-pipeline
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: churn-api
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Optional: expose outside the cluster via an ingress controller (nginx,
+# GKE Ingress, AWS ALB Ingress, etc). Edit the host before applying.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: churn-api
+  namespace: churn-pipeline
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: churn-api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: churn-api
+                port:
+                  number: 80

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: churn-pipeline
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: churn-api-config
+  namespace: churn-pipeline
+data:
+  # Every value here maps 1:1 to an env var read by api/config.py -
+  # change deploy-time behaviour without rebuilding the image.
+  PORT: "8000"
+  HOST: "0.0.0.0"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+  CORS_ORIGINS: "*"
+  SCHEDULE_INTERVAL_MINUTES: "2"
+  # Deployment (10-deployment.yaml) runs with replicas>1, so the embedded
+  # APScheduler is disabled here to avoid duplicate runs; 30-cronjob.yaml is
+  # the single source of truth for scheduling instead. Set back to "true"
+  # if you scale the Deployment down to a single replica and drop the CronJob.
+  ENABLE_EMBEDDED_SCHEDULER: "false"

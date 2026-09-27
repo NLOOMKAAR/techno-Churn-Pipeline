@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: churn-api
+  namespace: churn-pipeline
+  labels:
+    app: churn-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: churn-api
+  template:
+    metadata:
+      labels:
+        app: churn-api
+    spec:
+      # Non-root, matching the Dockerfile's USER appuser - required by
+      # restrictive PodSecurity/OPA policies on most managed clusters.
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: churn-api
+          image: <YOUR_REGISTRY>/telco-churn-dataops-pipeline:2.0.0
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: churn-api-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          # Liveness: restart the pod only if the process itself is wedged.
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Readiness: pull the pod out of the Service's endpoints until the
+          # DataOps pipeline has produced its first run (or dirs aren't ready).
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Give in-flight requests + the scheduler's SIGTERM handler time to
+          # finish before the pod is killed (matches entrypoint.sh's trap).
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+      terminationGracePeriodSeconds: 30
