@@ -39,7 +39,8 @@ from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.config import get_settings
@@ -263,6 +264,104 @@ def metrics():
         pipeline_runs_failed=len(history) - success,
         uptime_seconds=round((datetime.now(timezone.utc) - APP_START_TIME).total_seconds(), 2),
     )
+
+
+@app.on_event("startup")
+def start_keep_alive():
+    """Free-tier hosts sleep after ~15 min without inbound traffic, which would also pause the
+    2-minute scheduler. Render exposes the public URL as RENDER_EXTERNAL_URL; pinging it every
+    10 minutes goes through the host's proxy and counts as traffic. No-op locally/elsewhere.
+    Disable with KEEP_ALIVE=false."""
+    import os
+    import threading
+    import urllib.request
+    url = os.environ.get("RENDER_EXTERNAL_URL")
+    if not url or os.environ.get("KEEP_ALIVE", "true").lower() != "true":
+        return
+
+    def loop():
+        while True:
+            time.sleep(600)
+            try:
+                urllib.request.urlopen(url.rstrip("/") + "/health/live", timeout=15)
+                logger.info("keep-alive ping ok")
+            except Exception as exc:
+                logger.warning(f"keep-alive ping failed: {exc}")
+
+    threading.Thread(target=loop, daemon=True, name="keep-alive").start()
+    logger.info(f"keep-alive enabled -> {url} every 10 min")
+
+
+FRONTEND = settings.base_dir / "frontend" / "index.html"
+CHART_DIR = settings.base_dir / "charts"
+CHART_DIR.mkdir(exist_ok=True)
+app.mount("/charts", StaticFiles(directory=str(CHART_DIR)), name="charts")
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    """Single-page front end (falls back to the simple dashboard if missing)."""
+    if FRONTEND.exists():
+        return FileResponse(FRONTEND)
+    return HTMLResponse(dashboard())
+
+
+@app.get("/api/v1/preprocessing/report", tags=["preprocessing"],
+         responses={404: {"model": ErrorResponse}})
+def preprocessing_report():
+    """Activity 1.3 evidence: dtypes before/after, missing values, summary stats, normalization."""
+    import pandas as pd
+    from preprocessing import clean_dtypes, load_raw
+    if not settings.clean_data_file.exists():
+        raise HTTPException(status_code=404, detail="Run the pipeline first")
+    raw = load_raw()
+    before = {c: str(t) for c, t in raw.dtypes.items()}
+    fixed = clean_dtypes(raw.copy())
+    miss = fixed.isna().sum()
+    clean = pd.read_csv(settings.clean_data_file)
+    num = [c for c in ("SeniorCitizen", "tenure", "MonthlyCharges", "TotalCharges") if c in clean]
+    desc = clean[num].describe().round(3)
+    norm = [c for c in clean.columns if c.endswith("_norm")]
+    return {
+        "rows": len(clean),
+        "dtypes_before": before,
+        "dtypes_after": {c: str(t) for c, t in fixed.dtypes.items()},
+        "missing_before_imputation": {c: {"count": int(n), "pct": round(n / len(fixed) * 100, 2)}
+                                      for c, n in miss.items() if n > 0},
+        "missing_after_imputation": int(clean[num].isna().sum().sum()),
+        "imputation": "median (numeric columns)",
+        "summary_statistics": json.loads(desc.to_json()),
+        "normalization": {"method": "min-max", "columns": {c: {"min": float(clean[c].min()),
+                          "max": float(clean[c].max())} for c in norm}},
+    }
+
+
+@app.get("/api/v1/eda/summary", tags=["eda"], responses={404: {"model": ErrorResponse}})
+def eda_summary():
+    """Activity 1.4 evidence: binning, encoding and categorical-vs-churn relationships."""
+    import pandas as pd
+    if not settings.clean_data_file.exists():
+        raise HTTPException(status_code=404, detail="Run the pipeline first")
+    df = pd.read_csv(settings.clean_data_file)
+    y = (df["Churn"] == "Yes")
+    bins = pd.cut(df["tenure"], [-1, 12, 24, 48, 72], labels=["0-12 mo", "13-24 mo", "25-48 mo", "49-72 mo"])
+    cats = [c for c in df.select_dtypes(exclude="number").columns if c not in ("customerID",)]
+    return {
+        "churn_rate_by_tenure_bin": y.groupby(bins, observed=True).mean().round(4).to_dict(),
+        "churn_rate_by_contract": y.groupby(df["Contract"]).mean().round(4).to_dict(),
+        "churn_rate_by_internet_service": y.groupby(df["InternetService"]).mean().round(4).to_dict(),
+        "binning": "tenure -> 4 bins (0-12, 13-24, 25-48, 49-72 months)",
+        "encoding": {"method": "label encoding", "encoded_columns": cats},
+        "charts": sorted(p.name for p in CHART_DIR.glob("0[1-6]_*.png")),
+    }
+
+
+@app.get("/api/v1/pipeline/logs", tags=["pipeline"])
+def pipeline_logs(lines: int = 40):
+    """Tail of logs/pipeline.log (Activity 1.5 logging)."""
+    f = settings.log_dir / "pipeline.log"
+    text = f.read_text().splitlines()[-max(1, min(lines, 500)):] if f.exists() else []
+    return {"lines": text}
 
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["dashboard"])
