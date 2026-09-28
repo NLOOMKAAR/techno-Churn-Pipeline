@@ -1,1 +1,113 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Telco Churn DataOps Pipeline</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#1b2733;--mu:#65778a;--ac:#2563eb;--ok:#15803d;--bad:#b91c1c;--bd:#e2e8f0;--bar:#dbeafe}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1720;--card:#18222e;--tx:#e6edf3;--mu:#93a4b5;--ac:#60a5fa;--ok:#4ade80;--bad:#f87171;--bd:#2a3746;--bar:#243447}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h1{font-size:1.15rem;margin:0}small,.mu{color:var(--mu)}
+.pill{padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:600;background:var(--bar)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+nav{display:flex;gap:4px;overflow-x:auto;padding:8px 14px;background:var(--card);border-bottom:1px solid var(--bd)}
+nav button{border:0;background:none;color:var(--mu);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;white-space:nowrap}
+nav button.on{background:var(--ac);color:#fff}
+main{max-width:1100px;margin:0 auto;padding:18px 14px 50px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h2{font-size:1rem;margin:0 0 10px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.kpi b{display:block;font-size:1.6rem;color:var(--ac)}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd)}th{color:var(--mu);font-size:.74rem;text-transform:uppercase}
+.tw{overflow-x:auto}
+.bar{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:.82rem}.bar span:first-child{width:150px;color:var(--mu);flex:none;overflow:hidden;text-overflow:ellipsis}
+.bar i{flex:1;height:12px;background:var(--bar);border-radius:6px;overflow:hidden}.bar i u{display:block;height:100%;background:var(--ac)}.bar em{width:56px;text-align:right;font-style:normal}
+.flow{display:flex;flex-wrap:wrap;gap:8px}.flow div{background:var(--bar);border-radius:8px;padding:8px 12px;font-size:.82rem;flex:1;min-width:150px}
+.chips span{display:inline-block;background:var(--bar);border-radius:6px;padding:2px 8px;margin:2px;font-size:.76rem}
+pre{background:#0b1220;color:#9ae6b4;padding:12px;border-radius:8px;overflow:auto;font-size:.76rem;max-height:340px;margin:0}
+.gal{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.gal img{width:100%;border-radius:8px;border:1px solid var(--bd);background:#fff}
+button.b{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font:inherit}
+tr.cl{cursor:pointer}tr.cl:hover{background:var(--bar)}
+</style></head><body>
+<header><div><h1>📡 Telco Customer Churn - Cloud-Native DataOps Pipeline</h1>
+<small>AIMLCZG549 · API-driven Cloud Native Solutions · Assignment I</small></div>
+<div><span class="pill" id="live">checking…</span> <small id="clock"></small></div></header>
+<nav id="nav"></nav>
+<main>
+<section id="overview"></section><section id="ingest"></section><section id="prep"></section>
+<section id="eda"></section><section id="dataops"></section><section id="apis"></section><section id="team"></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const TABS=[['overview','Overview'],['ingest','1.2 Ingestion'],['prep','1.3 Pre-processing'],['eda','1.4 EDA'],['dataops','1.5 DataOps'],["apis","API Access"],['team','Team']];
+async function api(p){const t=performance.now();try{const r=await fetch(p);let j=null;try{j=await r.json()}catch(e){}return{p,status:r.status,ms:Math.round(performance.now()-t),json:j}}catch(e){return{p,status:0,ms:0,json:{error:String(e)}}}}
+const tbl=(h,r)=>'<div class="tw"><table><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+r.map(x=>'<tr>'+x.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</table></div>';
+const bars=(o,f=v=>v.toFixed(3),mx)=>{const e=Object.entries(o||{}),m=mx||Math.max(...e.map(x=>Math.abs(x[1])),1e-9);return e.map(([k,v])=>`<div class="bar"><span title="${esc(k)}">${esc(k)}</span><i><u style="width:${Math.abs(v)/m*100}%"></u></i><em>${f(v)}</em></div>`).join('')||'<span class="mu">no data yet</span>'};
+const card=(t,b)=>`<div class="card"><h2>${t}</h2>${b}</div>`;
+const pct=v=>(v*100).toFixed(1)+'%',col=s=>s>=200&&s<300?'ok':'bad';
+let cur='overview';
+$('#nav').innerHTML=TABS.map(([k,l])=>`<button data-k="${k}">${l}</button>`).join('');
+$('#nav').onclick=e=>{if(e.target.dataset.k)show(e.target.dataset.k)};
+function show(k){cur=k;document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==k));
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k==k));({overview,ingest,prep,eda,dataops,apitab,team})[k==="apis"?"apitab":k]();}
 
+async function overview(){
+const [runs,ds,fl]=await Promise.all([api('/api/v1/pipeline/runs?limit=1000'),api('/api/v1/dataset/info'),api('/api/v1/app/flow')]);
+const R=runs.json?.runs||[],ok=R.filter(r=>r.status==='SUCCESS').length,last=R[R.length-1]||{};
+const chk=[['1.1','Business understanding','Overview (this tab)'],['1.2','Data ingestion - public Kaggle dataset, 7,043 records','1.2 Ingestion'],['1.3','Summary stats, missing values, imputation, data types, normalization','1.3 Pre-processing'],['1.4','Correlation, binning, encoding, feature importance, univariate & bivariate charts','1.4 EDA'],['1.5','Automated workflow every 2 min, activity logs, cloud dashboard','1.5 DataOps'],['3.1','Retrieve application details via APIs (flow, deployment)','API Access'],['3.2','Display at least four application details','API Access'],['3.3','API testing: requests, responses, HTTP status codes','API Access']];
+$('#overview').innerHTML=card('1.1 Business understanding',`<p>A telecom operator wants to <b>identify customers likely to churn</b> (cancel service) so retention teams can act before they leave. Winning back a lost customer costs far more than keeping one, so an automated early-warning pipeline has direct commercial value.</p><p class="mu">This app ingests customer data, cleans it, runs exploratory analysis to surface churn drivers, re-runs itself every 2 minutes, and exposes everything through documented REST APIs.</p>`)+
+`<div class="grid"><div class="card kpi"><b>${runs.json?.total_runs??'-'}</b>pipeline runs</div><div class="card kpi"><b>${R.length?pct(ok/R.length):'-'}</b>success rate</div><div class="card kpi"><b>${ds.json?.rows?.toLocaleString()??'-'}</b>customers analysed</div><div class="card kpi"><b>${ds.json?.churn_rate!=null?pct(ds.json.churn_rate):'-'}</b>churn rate</div><div class="card kpi"><b>${last.duration_sec??'-'}s</b>last run duration</div></div>`+
+card('Pipeline flow',`<div class="flow">${(fl.json?.stages||[]).map(s=>`<div><b>${s.order}. ${esc(s.stage)}</b><br><small>${esc(s.module)}</small><br>${esc(s.description)}</div>`).join('')}</div><p class="mu">Schedule: ${esc(fl.json?.schedule||'')}</p>`)+
+card('Assignment coverage',tbl(['Activity','Requirement','Where'],chk.map(c=>['<b>'+c[0]+'</b>',c[1],'✅ '+c[2]])));}
+
+async function ingest(){
+const d=(await api('/api/v1/dataset/info')).json||{};
+$('#ingest').innerHTML=card('1.2 Data ingestion',`<div class="grid"><div><small>Source</small><br><b>Kaggle - Telco Customer Churn (IBM)</b><br><small>public repository dataset</small></div><div><small>Records</small><br><b>${d.rows?.toLocaleString()??'-'}</b></div><div><small>Columns (after pre-processing)</small><br><b>${d.columns??'-'}</b></div><div><small>Target</small><br><b>${esc(d.target_variable||'-')}</b> (${d.churn_rate!=null?pct(d.churn_rate):'-'} = Yes)</div></div><p class="mu">Ingested by <code>generate_data.py</code> over HTTPS at the start of the pipeline, with a bundled fallback copy. More than 7,000 rows is ample for a meaningful churn experiment.</p>`)+
+card('Columns',`<div class="chips">${(d.column_names||[]).map(c=>`<span>${esc(c)}</span>`).join('')}</div>`);}
+
+async function prep(){
+const r=(await api('/api/v1/preprocessing/report')).json||{};
+if(!r.rows){$('#prep').innerHTML=card('1.3 Pre-processing','<span class="mu">Report not available yet - wait for the first pipeline run.</span>');return}
+const ss=r.summary_statistics||{},cols=Object.keys(ss),rows=['count','mean','std','min','25%','50%','75%','max'];
+const dt=Object.keys(r.dtypes_before).map(c=>{const a=r.dtypes_before[c],b=r.dtypes_after[c];return [esc(c),esc(a),a!==b?`<b class="ok">${esc(b)}</b>`:esc(b)]});
+const mv=Object.entries(r.missing_before_imputation);
+$('#prep').innerHTML=card('Summary statistics (numeric columns)',tbl(['stat',...cols],rows.map(k=>[k,...cols.map(c=>ss[c][k])])))+
+`<div class="grid">`+card('Missing values',(mv.length?tbl(['Column','Missing','%'],mv.map(([c,v])=>[esc(c),v.count,v.pct+'%'])):'<span class="ok">none found</span>')+`<p class="mu">Imputation: ${esc(r.imputation)}. Missing after imputation: <b class="ok">${r.missing_after_imputation}</b></p>`)+
+card('Normalization ('+esc(r.normalization.method)+')',tbl(['Column','Min','Max'],Object.entries(r.normalization.columns).map(([c,v])=>[esc(c),v.min,v.max])))+`</div>`+
+card('Data types (before → after cleaning)',tbl(['Column','Before','After'],dt));}
+
+async function eda(){
+const [fi,es]=await Promise.all([api('/api/v1/eda/feature-importance'),api('/api/v1/eda/summary')]);
+const f=fi.json||{},e=es.json||{},t=Date.now();
+$('#eda').innerHTML=`<div class="grid">`+card('Correlation with churn (top)',bars(f.top_correlations_with_churn))+card('Feature importance (RandomForest)',bars(f.top_feature_importances))+`</div><div class="grid">`+
+card('Churn rate by tenure bin (binning)',bars(e.churn_rate_by_tenure_bin,pct,1)+`<p class="mu">${esc(e.binning||'')}</p>`)+card('Churn rate by contract (categorical)',bars(e.churn_rate_by_contract,pct,1))+card('Churn rate by internet service',bars(e.churn_rate_by_internet_service,pct,1))+`</div>`+
+card('Encoding',`<p>${esc(e.encoding?.method||'')} applied to ${e.encoding?.encoded_columns?.length||0} categorical columns:</p><div class="chips">${(e.encoding?.encoded_columns||[]).map(c=>`<span>${esc(c)}</span>`).join('')}</div>`)+
+card('Visualizations (univariate & bivariate)',`<div class="gal">${(e.charts||[]).map(c=>`<div><img loading="lazy" src="/charts/${c}?t=${t}" alt="${c}"><small>${c.replace(/^\d+_|\.png$/g,'').replace(/_/g,' ')}</small></div>`).join('')}</div>`);}
+
+async function dataops(){
+const [rr,lg]=await Promise.all([api('/api/v1/pipeline/runs?limit=25'),api('/api/v1/pipeline/logs?lines=40')]);
+const R=(rr.json?.runs||[]).slice().reverse(),last=R[0];
+$('#dataops').innerHTML=card('1.5 DataOps - automated schedule',`<p>Pipeline (pre-processing + EDA) is triggered by APScheduler <b>every 2 minutes</b>. Next run in <b id="cd">-</b>. Total runs: <b>${rr.json?.total_runs??0}</b>.</p><p class="mu">Free-tier note: the scheduler pauses if the host sleeps after ~15 min without traffic.</p>`)+
+card('Run history',tbl(['Run ID','Timestamp (UTC)','Status','Duration','Rows'],R.map(r=>[`<code>${esc(r.run_id)}</code>`,esc(r.timestamp_utc.replace('T',' ').slice(0,19)),`<b class="${r.status==='SUCCESS'?'ok':'bad'}">${esc(r.status)}</b>`,r.duration_sec+'s',r.rows_processed])))+
+card('Activity log (logs/pipeline.log)',`<pre>${esc((lg.json?.lines||[]).join('\n')||'no log yet')}</pre>`);
+window._last=last?Date.parse(last.timestamp_utc):null;}
+setInterval(()=>{const c=$('#cd');if(c&&window._last){const s=120-(((Date.now()-window._last)/1000)%120);c.textContent=Math.floor(s/60)+'m '+String(Math.floor(s%60)).padStart(2,'0')+'s'}},1000);
+setInterval(()=>{if(cur==='dataops')dataops()},15000);
+
+const TESTS=['/health/live','/health/ready','/api/v1/app/info','/api/v1/app/flow','/api/v1/pipeline/runs?limit=3','/api/v1/pipeline/latest','/api/v1/dataset/info','/api/v1/eda/feature-importance','/api/v1/preprocessing/report','/api/v1/eda/summary','/metrics','/api/v1/nonexistent'];
+async function apitab(){
+const [i,f]=await Promise.all([api('/api/v1/app/info'),api('/api/v1/app/flow')]);const a=i.json||{};
+$("#apis").innerHTML=card('3.1 / 3.2 Application details retrieved via API',`<div class="grid"><div><small>App name</small><br><b>${esc(a.app_name||'-')}</b></div><div><small>Version / environment</small><br><b>${esc(a.version||'-')} · ${esc(a.environment||'-')}</b></div><div><small>Deployment target</small><br><b>${esc(a.deployment_target||'-')}</b></div><div><small>Runtime</small><br><b>Python ${esc(a.python_version||'-')}</b></div><div><small>Started (UTC)</small><br><b>${esc((a.started_at_utc||'-').slice(0,19))}</b></div><div><small>Uptime</small><br><b>${a.uptime_seconds??'-'} s</b></div><div><small>Pipeline flow</small><br><b>${esc(f.json?.pipeline_name||'-')}</b></div><div><small>Schedule</small><br><b>${esc(f.json?.schedule||'-')}</b></div></div><p><a href="/docs" target="_blank">Swagger UI (/docs)</a> · <a href="/openapi.json" target="_blank">OpenAPI schema</a></p>`)+
+card('3.3 API testing - live requests, responses and HTTP status codes',`<p><button class="b" id="run">▶ Run all tests</button> <small class="mu">Click a row to see the JSON response. The last test is an intentional negative test (expects 404).</small></p><div id="res"></div><pre id="body" style="display:none"></pre>`);
+$('#run').onclick=async()=>{const out=[];$('#res').innerHTML='running…';for(const p of TESTS)out.push(await api(p));
+window._out=out;$('#res').innerHTML=tbl(['Method','Endpoint','Expected','Status','Time','Result'],out.map((o,n)=>{const exp=p=>p.includes('nonexistent')?404:200,e=exp(o.p),okk=o.status===e;return [`GET`,`<a href="#" data-n="${n}"><code>${esc(o.p)}</code></a>`,e,`<b class="${col(o.status)}">${o.status}</b>`,o.ms+' ms',okk?'<b class="ok">PASS</b>':'<b class="bad">FAIL</b>']}));
+$('#res').onclick=ev=>{const n=ev.target.closest('a')?.dataset.n;if(n==null)return;ev.preventDefault();const o=window._out[n];$('#body').style.display='block';$('#body').textContent='GET '+o.p+'\nHTTP '+o.status+' ('+o.ms+' ms)\n\n'+JSON.stringify(o.json,null,2)}};}
+
+function team(){$('#team').innerHTML=card('Group members and contributions',tbl(['Name','BITS ID','Contribution'],[['Oomkaar NL','2025af05057','Data ingestion, pre-processing, EDA, DataOps scheduling and logging, Docker / cloud deployment, API design and testing, front end']]))+card('Deliverables',`<ul><li>Sub-Objective 1: data pipeline - ingestion, pre-processing, EDA, DataOps (2-minute schedule, logs, dashboard)</li><li>Sub-Objective 2: REST APIs, testing with status codes, Postman collection</li><li>Cloud deployment: Docker container on Render (free tier); source on GitHub</li></ul>`);}
+
+async function health(){const h=await api('/health/ready');$('#live').innerHTML=h.status===200?'<span class="ok">● live · ready</span>':'<span class="bad">● not ready</span>'}
+setInterval(()=>{$('#clock').textContent=new Date().toUTCString().slice(17,25)+' UTC'},1000);
+health();setInterval(health,30000);show('overview');
+</script></body></html>
